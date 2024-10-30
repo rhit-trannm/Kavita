@@ -488,6 +488,14 @@ public class ArchiveService : IArchiveService
     private static ComicInfo? Deserialize(Stream stream)
     {
         var comicInfoXml = XDocument.Load(stream);
+
+        // Adjust root node if it is "ComicInfoXml"
+        if (comicInfoXml.Root?.Name == "ComicInfoXml")
+        {
+            comicInfoXml.Root.Name = "ComicInfo";
+        }
+
+        // Strip out empty tags as before
         comicInfoXml.Descendants()
             .Where(e => e.IsEmpty || string.IsNullOrWhiteSpace(e.Value))
             .Remove();
@@ -496,11 +504,11 @@ public class ArchiveService : IArchiveService
         using var reader = comicInfoXml.Root?.CreateReader();
         if (reader == null) return null;
 
-        var info  = (ComicInfo?) serializer.Deserialize(reader);
+        var info = (ComicInfo?)serializer.Deserialize(reader);
         ComicInfo.CleanComicInfo(info);
         return info;
-
     }
+
 
 
     private void ExtractArchiveEntities(IEnumerable<IArchiveEntry> entries, string extractPath)
